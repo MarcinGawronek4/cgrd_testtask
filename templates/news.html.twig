@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRG Test Task</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.js" 
+            integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" 
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="../assets/images/logo.svg" alt="cgrd">
+        </div>
+        {% if success is defined and success is not empty %}
+		    <div class="success">{{success}}</div>
+	    {% endif %}
+        {% if error is defined and error is not empty %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <div class="news_label">
+            <h4>All news</h4>
+        </div>
+        {% for article in news %}
+        <div class="news_container" id="{{ article.id }}">
+            <b class="news_title">{{ article.title }}</b>
+            <span class="news_description">{{ article.description }}</span>
+            <span class="news_icons">
+                <img class="edit" src="../assets/images/pencil.svg" 
+                     onClick="edit({{ article.id }}, '{{ article.title }}', '{{ article.description }}')" />
+                <img class="delete" src="../assets/images/close.svg" 
+                     onClick="deleteArticle({{ article.id }})" />
+            </span>
+        </div>
+        {% endfor %}
+
+        <div class="news_label">
+            <h4 class="edit_create_label">Create news</h4>
+        </div>
+
+        <form id="news_form">
+            <input type="hidden" id="action_name" name="action_name" value="create">
+            <input type="hidden" id="id" name="id">
+
+            <div class="form-group">
+                <input type="text" id="title" name="title" placeholder="Title">
+            </div>
+            <div class="form-group">
+                <textarea id="description" name="description" rows="4" cols="50" placeholder="Description"></textarea>
+            </div>
+            <button type="button" id="submit" class="btn" onclick="save()">Create</button>
+        </form>
+        <button class="btn" onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+function edit(article_id, article_title, article_description){
+    $('#action_name').val('edit');
+    $("#title").val(article_title);
+    $("#description").val(article_description);
+    $("#id").val(article_id);
+    $("#submit").text('Edit');
+    $(".edit_create_label").text('Edit news');
+    $(".close_edit").css("display", "block");
+    $("#title").keyup(function(){
+        $("#" + article_id + " .news_title").text($(this).val());
+    });
+    $("#description").keyup(function(){
+        $("#" + article_id + " .news_description").text($(this).val());
+    });
+};
+function create(){
+    $("#title").val('');
+    $("#description").val('');
+    $("#id").val('');
+    $("#submit").text('Create');
+    $(".edit_create_label").text('Create news');
+    $(".close_edit").css("display", "none");
+    $("#title").off("keyup");
+    $("#description").off("keyup");
+};
+function deleteArticle(article_id){
+    $.ajax({
+        type: "POST",
+        url: '/cgrd/news/delete',
+        data: {action_name: 'delete', id: article_id},
+        success: function () {
+            location.reload();
+        }
+    });
+};
+function save(){
+    if($("#action_name").val() == 'edit'){
+        $.ajax({
+            type: "POST",
+            url: '/cgrd/news/edit',
+            data: {id: $("#id").val(), title: $("#title").val(), description: $("#description").val()},
+            success: function () {
+                location.reload();
+            }
+        });
+    } else {
+        $.ajax({
+            type: "POST",
+            url: '/cgrd/news/create',
+            data: {title: $("#title").val(), description: $("#description").val()},
+            success: function () {
+                location.reload();
+            }
+        });
+    }
+}
+function logout(){
+    location.replace('/cgrd/l');
+}
+</script>
+</body>
+</html>
